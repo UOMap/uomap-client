@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.characterListBox = new System.Windows.Forms.ListBox();
+            this.characterListBox = new RefreshingListBox();
             this.SuspendLayout();
             // 
             // characterListBox
@@ -39,21 +39,21 @@
             this.characterListBox.Size = new System.Drawing.Size(142, 251);
             this.characterListBox.TabIndex = 0;
             // 
-            // Form1
+            // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(684, 364);
             this.Controls.Add(this.characterListBox);
-            this.Name = "Form1";
-            this.Text = "Form1";
+            this.Name = "MainForm";
+            this.Text = "uomap";
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.ListBox characterListBox;
+        private RefreshingListBox characterListBox;
 
     }
 }

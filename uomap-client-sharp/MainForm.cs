@@ -13,11 +13,12 @@ namespace uomap_client
 {
     public partial class MainForm : Form
     {
-        private TcpListener listener;
-        private List<GameWindow> windows;
+        private TcpListener listener;       
 
         private const int Port = 27555;
         private const string ProfileDirectory = "Profiles";
+
+        List<GameWindow> windows = new List<GameWindow>();
         
         public MainForm()
         {
@@ -50,7 +51,9 @@ namespace uomap_client
 
         public void UpdateClients(object sender, System.EventArgs e)
         {
-            windows = Game.FindWindows();
+            List<GameWindow> closedWindows = new List<GameWindow>();
+
+            Game.FindWindows(windows);
 
             foreach(var window in windows)
             {
@@ -60,7 +63,40 @@ namespace uomap_client
                 }
 
                 Game.UpdateClient(window);
-            }              
+
+                if(window.ClientClosed)
+                {
+                    closedWindows.Add(window);
+                    continue;
+                }                
+
+                /*if(window.IsActiveWindow)
+                {*/
+                    this.Text = window.Character.ToString();
+               // }
+
+                if(!characterListBox.Items.Contains(window.Character))
+                {
+                    characterListBox.Items.Add(window.Character);
+                }
+
+                if(window.Character.Invalidated)
+                {
+                    var index = characterListBox.Items.IndexOf(window.Character);
+                    characterListBox.RefreshItem(index);
+                }
+            }
+            
+            foreach(var window in closedWindows)
+            {
+                windows.Remove(window);
+                characterListBox.Items.Remove(window.Character);
+            }
+
+            if(windows.Count <= 0)
+            {
+                this.Text = "uomap";
+            }                                             
         }
 
         void AcceptCallback(IAsyncResult ar)
