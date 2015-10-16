@@ -34,24 +34,37 @@ namespace uomap_client
         private const int ProcessQueryInformation = 0x400;
         private const int ProcessVmRead = 0x10;  
                 
-        public static List<GameWindow> FindWindows()
-        {
-            var windows = new List<GameWindow>();
+        public static void FindWindows(List<GameWindow> windows)
+        {            
             var child = IntPtr.Zero;
-
+                        
             child = FindWindowEx(IntPtr.Zero, child, "Ultima Online", null);
             while(child != IntPtr.Zero) 
             {   
-                var length = GetWindowTextLength(child);
-                var sb = new StringBuilder(length + 1);
-                GetWindowText(child, sb, sb.Capacity);
+                if(!WindowTracked(windows, child))
+                {
+                    var length = GetWindowTextLength(child);
+                    var sb = new StringBuilder(length + 1);
+                    GetWindowText(child, sb, sb.Capacity);
 
-                windows.Add(new GameWindow(child, sb.ToString()));  
+                    windows.Add(new GameWindow(child, sb.ToString()));
+                }
 
                 child = FindWindowEx(IntPtr.Zero, child, "Ultima Online", null);
-            }          
+            }                      
+        }
 
-            return windows;
+        public static bool WindowTracked(List<GameWindow> windows, IntPtr handle)
+        {
+            foreach(var window in windows)
+            {
+                if(window.SameHandle(handle))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static int Initialize(GameWindow window)
@@ -148,19 +161,28 @@ namespace uomap_client
 
             var windowHandle = window.OpenHandle.ToInt32();
 
-            ReadProcessMemory(windowHandle, window.ServerAddress, buffer, buffer.Length, ref bytesRead);
-            window.Character.Server = Encoding.UTF8.GetString(buffer).TrimEnd('\0');
+            try
+            {
+                ReadProcessMemory(windowHandle, window.ServerAddress, buffer, buffer.Length, ref bytesRead);
+                window.Character.Server = Encoding.UTF8.GetString(buffer).TrimEnd('\0');
 
-            ReadProcessMemory(windowHandle, window.CharacterAddress, buffer, buffer.Length, ref bytesRead);
-            window.Character.Name = Encoding.UTF8.GetString(buffer).TrimEnd('\0');
-            var nullIndex = window.Character.Name.IndexOf('\0');
-            window.Character.Name = window.Character.Name.Substring(0, nullIndex);
+                ReadProcessMemory(windowHandle, window.CharacterAddress, buffer, buffer.Length, ref bytesRead);
+                window.Character.Name = Encoding.UTF8.GetString(buffer).TrimEnd('\0');
+                var nullIndex = window.Character.Name.IndexOf('\0');
+                window.Character.Name = window.Character.Name.Substring(0, nullIndex);
 
-            ReadProcessMemory(windowHandle, window.PositionAddress, buffer, buffer.Length, ref bytesRead);
-            window.Character.Z = BitConverter.ToInt32(buffer, 0);
-            window.Character.Y = BitConverter.ToInt32(buffer, 4);
-            window.Character.X = BitConverter.ToInt32(buffer, 8);
-            window.Character.F = BitConverter.ToInt32(buffer, 12);
+                ReadProcessMemory(windowHandle, window.PositionAddress, buffer, buffer.Length, ref bytesRead);
+                window.Character.Z = BitConverter.ToInt32(buffer, 0);
+                window.Character.Y = BitConverter.ToInt32(buffer, 4);
+                window.Character.X = BitConverter.ToInt32(buffer, 8);
+                window.Character.F = BitConverter.ToInt32(buffer, 12);
+            }
+            catch(Exception ex)
+            {
+                // The client has closed
+                window.ClientClosed = true;
+
+            }
 
             var foreground = GetForegroundWindow();
 

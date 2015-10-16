@@ -22,11 +22,18 @@ namespace uomap_client
         public int PositionAddress { get; set; }
         public int ServerAddress { get; set; }
 
+        public bool ClientClosed { get; set; }
+
         public GameWindow(IntPtr h, string t)
         {
             Handle = h;
             Title = t;
             Character = new Character();
+        }
+
+        public bool SameHandle(IntPtr compare)
+        {
+            return Handle.ToInt32() == compare.ToInt32();
         }
 
         public bool IsInitialized
