@@ -6,7 +6,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using Newtonsoft.Json;
 using Timer = System.Windows.Forms.Timer;
 
 namespace uomap_client
@@ -134,26 +133,13 @@ namespace uomap_client
 
             if (state.Stream.CanWrite)
             {
-                
-                var characters = new List<Character>();
+                var output = JsonFormatter.BuildJson(windows);
 
-                foreach (var window in windows)
-                {
-                    characters.Add(window.Character);
-                }
+                var writeBuffer = Encoding.ASCII.GetBytes(output);
+                state.Stream.BeginWrite(writeBuffer, 0, writeBuffer.Length, WriteCallback, state);
 
-                if (characters.Count > 0)
-                {
-                    var output = JsonConvert.SerializeObject(characters);
-
-                    var writeBuffer = Encoding.ASCII.GetBytes(output);
-                    state.Stream.BeginWrite(writeBuffer, 0, writeBuffer.Length, WriteCallback, state);
-                }
-                else
-                {
-                    state.Stream.Flush();
-                    state.Stream.Close();
-                }
+                state.Stream.Flush();
+                state.Stream.Close();                
             }
         }
 

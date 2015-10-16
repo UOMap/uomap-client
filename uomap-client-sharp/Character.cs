@@ -63,5 +63,23 @@ namespace uomap_client
         {
             return string.Format("{0} - {1}", Name, Server);
         }
+
+        public string ToJson()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append("{");
+
+            sb.AppendFormat("\"name\":\"{0}\",", _name);
+            sb.AppendFormat("\"server\":\"{0}\",", _server);
+            sb.AppendFormat("\"x\":{0},", X);
+            sb.AppendFormat("\"y\":{0},", Y);
+            sb.AppendFormat("\"z\":{0},", Z);
+            sb.AppendFormat("\"f\":{0}", F);
+
+            sb.Append("}");
+
+            return sb.ToString();
+        }
     }
 }
