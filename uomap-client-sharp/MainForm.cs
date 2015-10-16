@@ -11,7 +11,7 @@ using Timer = System.Windows.Forms.Timer;
 
 namespace uomap_client
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         private TcpListener listener;
         private List<GameWindow> windows;
@@ -19,7 +19,7 @@ namespace uomap_client
         private const int Port = 27555;
         private const string ProfileDirectory = "Profiles";
         
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
 
@@ -60,7 +60,7 @@ namespace uomap_client
                 }
 
                 Game.UpdateClient(window);
-            }  
+            }              
         }
 
         void AcceptCallback(IAsyncResult ar)
