@@ -164,10 +164,10 @@ namespace uomap_client
             try
             {
                 ReadProcessMemory(windowHandle, window.ServerAddress, buffer, buffer.Length, ref bytesRead);
-                window.Character.Server = Encoding.UTF8.GetString(buffer).TrimEnd('\0');
+                window.Server = Encoding.UTF8.GetString(buffer).TrimEnd('\0');
 
                 ReadProcessMemory(windowHandle, window.CharacterAddress, buffer, buffer.Length, ref bytesRead);
-                window.Character.Name = Encoding.UTF8.GetString(buffer).TrimEnd('\0');
+                window.Name = Encoding.UTF8.GetString(buffer).TrimEnd('\0');
 
                 ReadProcessMemory(windowHandle, window.PositionAddress, buffer, buffer.Length, ref bytesRead);
 
@@ -177,13 +177,13 @@ namespace uomap_client
                 var F = BitConverter.ToInt32(buffer, 12);
                 var IsActive = GetForegroundWindow().ToInt32() == window.Handle.ToInt32();
 
-                window.Character.Moved = (Z != window.Character.Z || Y != window.Character.Y || X != window.Character.X || F != window.Character.F || window.Character.IsActive != IsActive);
+                window.Moved = (Z != window.Z || Y != window.Y || X != window.X || F != window.F || window.IsActive != IsActive);
 
-                window.Character.Z = Z;
-                window.Character.Y = Y;
-                window.Character.X = X;
-                window.Character.F = F;
-                window.Character.IsActive = IsActive;
+                window.Z = Z;
+                window.Y = Y;
+                window.X = X;
+                window.F = F;
+                window.IsActive = IsActive;
             }
             catch(Exception ex)
             {

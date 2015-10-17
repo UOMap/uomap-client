@@ -12,11 +12,8 @@ namespace uomap_client
         /// <summary>
         /// Is the client window in focus?
         /// </summary>
-        public bool IsActiveWindow { get; set; }
 
         public IntPtr OpenHandle { get; set; }
-
-        public Character Character { get; set; }
 
         public int CharacterAddress { get; set; }
         public int PositionAddress { get; set; }
@@ -28,7 +25,6 @@ namespace uomap_client
         {
             Handle = h;
             Title = t;
-            Character = new Character();
         }
 
         public bool SameHandle(IntPtr compare)
@@ -42,6 +38,86 @@ namespace uomap_client
             {
                 return (CharacterAddress != 0) && (PositionAddress != 0) && (ServerAddress != 0);
             }
+        }
+
+        private string _server;
+        private string _name;
+
+        private bool _invalidated;
+
+        public string Server 
+        { 
+            get
+            {
+                return _server;
+            }
+            set
+            {
+                if(_server != value)
+                {
+                    _server = value;
+                    _invalidated = true;
+                }
+            }
+        }
+
+        public string Name
+        {
+            get
+            {
+                return _name;
+            }
+            set
+            {
+                if (_name != value)
+                {
+                    _name = value;
+                    _invalidated = true;
+                }
+            }
+        }
+
+        public int X { get; set; }
+        public int Y { get; set; }
+        public int Z { get; set; }
+        public int F { get; set; }
+        public bool Moved { get; set; }
+        public bool IsActive { get; set; }
+
+        public bool Invalidated
+        {
+            get
+            {
+                return _invalidated;
+            }
+            set
+            {
+                _invalidated = value;
+            }
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0} - {1}", Name, Server);
+        }
+
+        public string ToJson()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append("{");
+
+            sb.AppendFormat("\"name\":\"{0}\",", _name);
+            sb.AppendFormat("\"server\":\"{0}\",", _server);
+            sb.AppendFormat("\"x\":{0},", X);
+            sb.AppendFormat("\"y\":{0},", Y);
+            sb.AppendFormat("\"z\":{0},", Z);
+            sb.AppendFormat("\"f\":{0},", F);
+            sb.AppendFormat("\"active\":{0}", IsActive ? "true" : "false");
+
+            sb.Append("}");
+
+            return sb.ToString();
         }
     }
 }

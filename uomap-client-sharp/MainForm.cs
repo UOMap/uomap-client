@@ -29,7 +29,7 @@ namespace uomap_client
                 if (!window.IsInitialized || window.ClientClosed)
                     continue;
 
-                statuses.Add(window.Character.ToJson());
+                statuses.Add(window.ToJson());
             }
 
             Send("[" + string.Join (",", statuses.ToArray ()) + "]");
@@ -97,31 +97,31 @@ namespace uomap_client
                     continue;
                 }                
 
-                if(!characterListBox.Items.Contains(window.Character))
+                if(!characterListBox.Items.Contains(window))
                 {
-                    characterListBox.Items.Add(window.Character);
+                    characterListBox.Items.Add(window);
                 }
 
-                var index = characterListBox.Items.IndexOf(window.Character);
+                var index = characterListBox.Items.IndexOf(window);
 
-                if(window.Character.Invalidated)
+                if(window.Invalidated)
                 {
                     characterListBox.RefreshItem(index);
                 }
 
-                if (window.Character.IsActive)
+                if (window.IsActive)
                     characterListBox.SetSelected (index, true);
                 else
                     characterListBox.SetSelected (index, false);
 
-                if (window.Character.Moved)
-                    statuses.Add(window.Character.ToJson());
+                if (window.Moved)
+                    statuses.Add(window.ToJson());
             }
             
             foreach(var window in closedWindows)
             {
                 windows.Remove(window);
-                characterListBox.Items.Remove(window.Character);
+                characterListBox.Items.Remove(window);
             }
 
             if(windows.Count <= 0)
