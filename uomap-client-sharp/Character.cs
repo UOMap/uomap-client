@@ -46,6 +46,8 @@ namespace uomap_client
         public int Y { get; set; }
         public int Z { get; set; }
         public int F { get; set; }
+        public bool Moved { get; set; }
+        public bool IsActive { get; set; }
 
         public bool Invalidated
         {
@@ -75,7 +77,8 @@ namespace uomap_client
             sb.AppendFormat("\"x\":{0},", X);
             sb.AppendFormat("\"y\":{0},", Y);
             sb.AppendFormat("\"z\":{0},", Z);
-            sb.AppendFormat("\"f\":{0}", F);
+            sb.AppendFormat("\"f\":{0},", F);
+            sb.AppendFormat("\"active\":{0}", IsActive);
 
             sb.Append("}");
 

@@ -168,31 +168,27 @@ namespace uomap_client
 
                 ReadProcessMemory(windowHandle, window.CharacterAddress, buffer, buffer.Length, ref bytesRead);
                 window.Character.Name = Encoding.UTF8.GetString(buffer).TrimEnd('\0');
-                var nullIndex = window.Character.Name.IndexOf('\0');
-                window.Character.Name = window.Character.Name.Substring(0, nullIndex);
 
                 ReadProcessMemory(windowHandle, window.PositionAddress, buffer, buffer.Length, ref bytesRead);
-                window.Character.Z = BitConverter.ToInt32(buffer, 0);
-                window.Character.Y = BitConverter.ToInt32(buffer, 4);
-                window.Character.X = BitConverter.ToInt32(buffer, 8);
-                window.Character.F = BitConverter.ToInt32(buffer, 12);
+
+                var Z = BitConverter.ToInt32(buffer, 0);
+                var Y = BitConverter.ToInt32(buffer, 4);
+                var X = BitConverter.ToInt32(buffer, 8);
+                var F = BitConverter.ToInt32(buffer, 12);
+                var IsActive = GetForegroundWindow().ToInt32() == window.Handle.ToInt32();
+
+                window.Character.Moved = (Z != window.Character.Z || Y != window.Character.Y || X != window.Character.X || F != window.Character.F || window.Character.IsActive != IsActive);
+
+                window.Character.Z = Z;
+                window.Character.Y = Y;
+                window.Character.X = X;
+                window.Character.F = F;
+                window.Character.IsActive = IsActive;
             }
             catch(Exception ex)
             {
                 // The client has closed
                 window.ClientClosed = true;
-
-            }
-
-            var foreground = GetForegroundWindow();
-
-            if(foreground.ToInt32() == windowHandle)
-            {
-                window.IsActiveWindow = true;
-            }
-            else
-            {
-                window.IsActiveWindow = false;
             }
         }
     }   

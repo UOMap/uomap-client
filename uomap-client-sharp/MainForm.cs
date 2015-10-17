@@ -7,17 +7,43 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
+using WebSocketSharp;
+using WebSocketSharp.Server;
 
 namespace uomap_client
 {
+    public class WSHandler : WebSocketBehavior
+    {
+        public WSHandler()
+        {
+            IgnoreExtensions = true;
+        }
+
+
+        protected override void OnOpen ()
+        {
+            List<String> statuses = new List<String>();
+
+            foreach(var window in MainForm.windows)
+            {
+                if (!window.IsInitialized || window.ClientClosed)
+                    continue;
+
+                statuses.Add(window.Character.ToJson());
+            }
+
+            Send("[" + string.Join (",", statuses.ToArray ()) + "]");
+        }
+    }
+
     public partial class MainForm : Form
     {
-        private TcpListener listener;       
+        private WebSocketServer wss;
 
         private const int Port = 27555;
         private const string ProfileDirectory = "Profiles";
 
-        List<GameWindow> windows = new List<GameWindow>();
+        public static List<GameWindow> windows = new List<GameWindow>();
         
         public MainForm()
         {
@@ -29,9 +55,10 @@ namespace uomap_client
             updateTimer.Tick += UpdateClients;
             updateTimer.Start();
 
-            listener = new TcpListener(IPAddress.Loopback, Port);
-            listener.Start();
-            listener.BeginAcceptTcpClient(AcceptCallback, listener);
+            wss = new WebSocketServer ("ws://127.0.0.1:27555");
+            wss.AddWebSocketService<WSHandler> ("/");
+            wss.ReuseAddress = true;
+            wss.Start();
         }
 
         public void LoadProfiles()
@@ -51,6 +78,7 @@ namespace uomap_client
         public void UpdateClients(object sender, System.EventArgs e)
         {
             List<GameWindow> closedWindows = new List<GameWindow>();
+            List<String> statuses = new List<String>();
 
             Game.FindWindows(windows);
 
@@ -69,21 +97,25 @@ namespace uomap_client
                     continue;
                 }                
 
-                /*if(window.IsActiveWindow)
-                {*/
-                    this.Text = window.Character.ToString();
-               // }
-
                 if(!characterListBox.Items.Contains(window.Character))
                 {
                     characterListBox.Items.Add(window.Character);
                 }
 
+                var index = characterListBox.Items.IndexOf(window.Character);
+
                 if(window.Character.Invalidated)
                 {
-                    var index = characterListBox.Items.IndexOf(window.Character);
                     characterListBox.RefreshItem(index);
                 }
+
+                if (window.Character.IsActive)
+                    characterListBox.SetSelected (index, true);
+                else
+                    characterListBox.SetSelected (index, false);
+
+                if (window.Character.Moved)
+                    statuses.Add(window.Character.ToJson());
             }
             
             foreach(var window in closedWindows)
@@ -96,61 +128,11 @@ namespace uomap_client
             {
                 this.Text = "uomap";
             }                                             
-        }
 
-        void AcceptCallback(IAsyncResult ar)
-        {
-            var o = new StateObject();
-
-            // Get the socket that handles the client request.
-            var server = (TcpListener)ar.AsyncState;
-            var client = server.EndAcceptTcpClient(ar);
-
-            server.BeginAcceptTcpClient(AcceptCallback, server);
-
-            o.Client = client;
-
-            var networkStream = client.GetStream();
-
-            o.Stream = networkStream;
-            networkStream.BeginRead(o.Buffer, 0, o.Buffer.Length, ReadCallback, o);
-        }
-        
-        public class StateObject
-        {
-            public TcpClient Client = null;
-            public NetworkStream Stream = null;
-            public const int BufferSize = 1024;
-            public byte[] Buffer = new byte[BufferSize];
-            public StringBuilder sb = new StringBuilder();
-        }
-
-        public void ReadCallback(IAsyncResult ar)
-        {
-            var state = (StateObject)ar.AsyncState;
-            state.Stream.EndRead(ar);
-            state.sb.Append(Encoding.ASCII.GetString(state.Buffer, 0, state.Buffer.Length));
-
-            if (state.Stream.CanWrite)
+            if (statuses.Count > 0)
             {
-                var output = JsonFormatter.BuildJson(windows);
-
-                var writeBuffer = Encoding.ASCII.GetBytes(output);
-                state.Stream.BeginWrite(writeBuffer, 0, writeBuffer.Length, WriteCallback, state);
-
-                state.Stream.Flush();
-                state.Stream.Close();                
+                wss.WebSocketServices ["/"].Sessions.Broadcast ("[" + string.Join (",", statuses.ToArray ()) + "]");
             }
         }
-
-        public void WriteCallback(IAsyncResult ar)
-        {
-            var state = (StateObject)ar.AsyncState;
-            state.Stream.EndWrite(ar);
-            state.Stream.Flush();
-            state.Stream.Close();
-        }
-
-        
     }
 }
