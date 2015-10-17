@@ -51,7 +51,7 @@ namespace uomap_client
 
             LoadProfiles();
 
-            var updateTimer = new Timer {Interval = 1000};
+            var updateTimer = new Timer {Interval = 500};
             updateTimer.Tick += UpdateClients;
             updateTimer.Start();
 
