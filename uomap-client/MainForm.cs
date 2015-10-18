@@ -1,41 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
 using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
-using WebSocketSharp;
 using WebSocketSharp.Server;
 
 namespace uomap_client
 {
-    public class WSHandler : WebSocketBehavior
-    {
-        public WSHandler()
-        {
-            IgnoreExtensions = true;
-        }
-
-
-        protected override void OnOpen ()
-        {
-            List<String> statuses = new List<String>();
-
-            foreach(var window in MainForm.windows)
-            {
-                if (!window.IsInitialized || window.ClientClosed)
-                    continue;
-
-                statuses.Add(window.ToJson());
-            }
-
-            Send("[" + string.Join (",", statuses.ToArray ()) + "]");
-        }
-    }
-
     public partial class MainForm : Form
     {
         private WebSocketServer wss;
@@ -75,10 +46,10 @@ namespace uomap_client
             }
         }
 
-        public void UpdateClients(object sender, System.EventArgs e)
+        public void UpdateClients(object sender, EventArgs e)
         {
-            List<GameWindow> closedWindows = new List<GameWindow>();
-            List<String> statuses = new List<String>();
+            var closedWindows = new List<GameWindow>();
+            var statuses = new List<String>();
 
             Game.FindWindows(windows);
 
@@ -126,13 +97,42 @@ namespace uomap_client
 
             if(windows.Count <= 0)
             {
-                this.Text = "uomap";
+                Text = "uomap";
             }                                             
 
             if (statuses.Count > 0)
             {
                 wss.WebSocketServices ["/"].Sessions.Broadcast ("[" + string.Join (",", statuses.ToArray ()) + "]");
             }
+        }
+
+        private void openMapButton_Click(object sender, EventArgs e)
+        {
+            System.Diagnostics.Process.Start("http://uomap.net/dev/map.html");
+        }
+    }
+
+    public class WSHandler : WebSocketBehavior
+    {
+        public WSHandler()
+        {
+            IgnoreExtensions = true;
+        }
+
+
+        protected override void OnOpen()
+        {
+            var statuses = new List<String>();
+
+            foreach (var window in MainForm.windows)
+            {
+                if (!window.IsInitialized || window.ClientClosed)
+                    continue;
+
+                statuses.Add(window.ToJson());
+            }
+
+            Send("[" + string.Join(",", statuses.ToArray()) + "]");
         }
     }
 }

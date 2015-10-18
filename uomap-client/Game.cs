@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Security.Principal;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -90,10 +89,8 @@ namespace uomap_client
 
             var processHandle = window.OpenHandle.ToInt32();            
 
-            for (int i = 0; i < reader.ImageSectionHeaders.Length; i++ )
+            foreach (var currentSection in reader.ImageSectionHeaders)
             {
-                var currentSection = reader.ImageSectionHeaders[i];
-
                 if(!currentSection.HasFlag(PeHeaderReader.DataSectionFlags.MemoryExecute))
                 {
                     continue;
@@ -105,7 +102,7 @@ namespace uomap_client
                 {
                     short[] pattern = { 0x8B, 0x15, -1, -1, -1, -1, 0x8B, 0x01, 0x8B, 0x40, 0x54, 0x52, 0x8B, 0x15 };
 
-                     // ~6.0.14.4 - 7.x (Stygian Abyss to High Seas+)
+                    // ~6.0.14.4 - 7.x (Stygian Abyss to High Seas+)
                     if (Pattern.PatternSearch(processHandle, address, currentSection.VirtualSize, pattern) > 0)
                     {                        
                         window.PositionAddress = ((pattern[5] << 24) + (pattern[4] << 16) + (pattern[3] << 8) + pattern[2]) - 4;
@@ -128,7 +125,7 @@ namespace uomap_client
                 {
                     short[] pattern = { 0x8B, 0x0D, -1, -1, -1, -1, 0x53, 0x55, 0x56, 0x8B, 0x35 };
 
-                     // ~6.0.14.4 - 7.x (Stygian Abyss to High Seas+)
+                    // ~6.0.14.4 - 7.x (Stygian Abyss to High Seas+)
                     if (Pattern.PatternSearch(processHandle, address, currentSection.VirtualSize, pattern) > 0)
                     {                        
                         window.PositionAddress = ((pattern[5] << 24) + (pattern[4] << 16) + (pattern[3] << 8) + pattern[2]) - 4;
@@ -144,7 +141,7 @@ namespace uomap_client
                         window.ServerAddress = ((pattern[7] << 24) + (pattern[6] << 16) + (pattern[5] << 8) + pattern[4]);
                         window.CharacterAddress = ((pattern[26] << 24) + (pattern[25] << 16) + (pattern[24] << 8) + pattern[23]);
                     }
-                }   
+                }
             }
             return 0;
         }
@@ -168,6 +165,11 @@ namespace uomap_client
 
                 ReadProcessMemory(windowHandle, window.CharacterAddress, buffer, buffer.Length, ref bytesRead);
                 window.Name = Encoding.UTF8.GetString(buffer).TrimEnd('\0');
+
+                // remove everything from the string up to the first null character
+                // if you dont do this, the json will be invalid
+                var nullIndex = window.Name.IndexOf('\0');
+                window.Name = window.Name.Substring(0, nullIndex);
 
                 ReadProcessMemory(windowHandle, window.PositionAddress, buffer, buffer.Length, ref bytesRead);
 

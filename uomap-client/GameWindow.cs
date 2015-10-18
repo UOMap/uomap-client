@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace uomap_client
@@ -103,7 +102,7 @@ namespace uomap_client
 
         public string ToJson()
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             sb.Append("{");
 
